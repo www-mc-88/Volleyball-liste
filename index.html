@@ -4,9 +4,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Volleyball Liste</title>
   <style>
-    body { font-family: Arial, sans-serif; background: black; padding: 20px; }
+    body { font-family: Arial, sans-serif; background: #f2f2f2; padding: 20px; }
     input, button, select { margin: 5px; padding: 8px; }
     .hidden { display: none; }
+    .captain { color: gold; font-weight: bold; }
   </style>
 </head>
 <body>  <div id="login-page">
@@ -36,13 +37,15 @@
           <th>Nummer</th>
           <th>Position</th>
           <th>Aktion</th>
+          <th id="lead-col" class="hidden">Teamleitung</th>
+          <th id="captain-col" class="hidden">Kapitän</th>
         </tr>
       </thead>
       <tbody id="team-table"></tbody>
     </table>
   </div>  <script>
     let users = [
-      { name: "janis czech", pass: "janis2014!!", nummer: "", position: "Schiri", isLead: true }
+      { name: "janis czech", pass: "janis2014!!", nummer: "", position: "Schiri", isLead: true, isCaptain: false }
     ];
     let currentUser = null;
 
@@ -63,7 +66,7 @@
       const position = document.getElementById('reg-position').value;
       if (!name || !pass || !nummer || !position) return alert("Bitte alles ausfüllen");
       if (users.find(u => u.name === name)) return alert("Benutzer existiert schon");
-      users.push({ name, pass, nummer, position, isLead: false });
+      users.push({ name, pass, nummer, position, isLead: false, isCaptain: false });
       alert("Registriert! Jetzt einloggen.");
       showLogin();
     }
@@ -78,6 +81,10 @@
       document.getElementById('username').innerText = currentUser.name;
       document.getElementById('login-page').classList.add('hidden');
       document.getElementById('main-page').classList.remove('hidden');
+      if (currentUser.isLead) {
+        document.getElementById('lead-col').classList.remove('hidden');
+        document.getElementById('captain-col').classList.remove('hidden');
+      }
       renderTable();
     }
 
@@ -87,12 +94,20 @@
       users.forEach((u, i) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${u.name}</td>
+          <td class='${u.isCaptain ? 'captain' : ''}'>${u.name}</td>
           <td>${u.nummer || "-"}</td>
           <td>${u.position || "-"}</td>
           <td>
             ${currentUser.isLead && !u.isLead && u.name !== currentUser.name ? `<button onclick="removeUser(${i})">Rauswerfen</button>` : ""}
             ${u.name === currentUser.name && !u.isLead ? `<button onclick="leaveTeam()">Verlassen</button>` : ""}
+          </td>
+          <td>
+            ${currentUser.name === "janis czech" && u.name !== "janis czech" ? `<input type='checkbox' onchange='toggleUserLead(${i}, this.checked)' ${u.isLead ? "checked" : ""}>` : ""}
+          </td>
+          <td>
+            ${currentUser.isLead && u.name !== currentUser.name ? 
+              (u.isCaptain ? `<button onclick='removeCaptain(${i})'>Kapitän entfernen</button>` : `<button onclick='makeCaptain(${i})'>Kapitän machen</button>`) 
+              : (u.isCaptain ? '❤️' : '')}
           </td>`;
         tbody.appendChild(tr);
       });
@@ -109,6 +124,21 @@
       users = users.filter(u => u.name !== currentUser.name);
       alert("Du hast das Team verlassen.");
       location.reload();
+    }
+
+    function toggleUserLead(index, isLead) {
+      users[index].isLead = isLead;
+      renderTable();
+    }
+
+    function makeCaptain(index) {
+      users[index].isCaptain = true;
+      renderTable();
+    }
+
+    function removeCaptain(index) {
+      users[index].isCaptain = false;
+      renderTable();
     }
   </script></body>
 </html>
