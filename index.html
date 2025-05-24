@@ -1,0 +1,114 @@
+<!DOCTYPE html><html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Volleyball Liste</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f2f2f2; padding: 20px; }
+    input, button, select { margin: 5px; padding: 8px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>  <div id="login-page">
+    <h2>Login</h2>
+    <input id="login-name" placeholder="Vor- und Nachname"><br>
+    <input id="login-pass" type="password" placeholder="Passwort"><br>
+    <button onclick="login()">Login</button>
+    <p>Kein Konto? <a href="#" onclick="showRegister()">Registrieren</a></p>
+  </div>  <div id="register-page" class="hidden">
+    <h2>Registrieren</h2>
+    <input id="reg-name" placeholder="Vor- und Nachname"><br>
+    <input id="reg-pass" type="password" placeholder="Passwort"><br>
+    <input id="reg-nummer" placeholder="Wunsch Nummer"><br>
+    <select id="reg-position">
+      <option value="Angreifer">Angreifer</option>
+      <option value="Verteidiger">Verteidiger</option>
+      <option value="Zuspieler">Zuspieler</option>
+    </select><br>
+    <button onclick="register()">Registrieren</button>
+    <p>Schon ein Konto? <a href="#" onclick="showLogin()">Login</a></p>
+  </div>  <div id="main-page" class="hidden">
+    <h2>Willkommen, <span id="username"></span></h2>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Nummer</th>
+          <th>Position</th>
+          <th>Aktion</th>
+        </tr>
+      </thead>
+      <tbody id="team-table"></tbody>
+    </table>
+  </div>  <script>
+    let users = [
+      { name: "janis czech", pass: "janis2014!!", nummer: "", position: "Schiri", isLead: true }
+    ];
+    let currentUser = null;
+
+    function showRegister() {
+      document.getElementById('login-page').classList.add('hidden');
+      document.getElementById('register-page').classList.remove('hidden');
+    }
+
+    function showLogin() {
+      document.getElementById('register-page').classList.add('hidden');
+      document.getElementById('login-page').classList.remove('hidden');
+    }
+
+    function register() {
+      const name = document.getElementById('reg-name').value.trim().toLowerCase();
+      const pass = document.getElementById('reg-pass').value;
+      const nummer = document.getElementById('reg-nummer').value;
+      const position = document.getElementById('reg-position').value;
+      if (!name || !pass || !nummer || !position) return alert("Bitte alles ausfüllen");
+      if (users.find(u => u.name === name)) return alert("Benutzer existiert schon");
+      users.push({ name, pass, nummer, position, isLead: false });
+      alert("Registriert! Jetzt einloggen.");
+      showLogin();
+    }
+
+    function login() {
+      const name = document.getElementById('login-name').value.trim().toLowerCase();
+      const pass = document.getElementById('login-pass').value;
+      const user = users.find(u => u.name === name && u.pass === pass);
+      if (!user) return alert("Login fehlgeschlagen");
+      currentUser = user;
+      if (currentUser.name === "janis czech") currentUser.isLead = true;
+      document.getElementById('username').innerText = currentUser.name;
+      document.getElementById('login-page').classList.add('hidden');
+      document.getElementById('main-page').classList.remove('hidden');
+      renderTable();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('team-table');
+      tbody.innerHTML = "";
+      users.forEach((u, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${u.name}</td>
+          <td>${u.nummer || "-"}</td>
+          <td>${u.position || "-"}</td>
+          <td>
+            ${currentUser.isLead && !u.isLead && u.name !== currentUser.name ? `<button onclick="removeUser(${i})">Rauswerfen</button>` : ""}
+            ${u.name === currentUser.name && !u.isLead ? `<button onclick="leaveTeam()">Verlassen</button>` : ""}
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function removeUser(index) {
+      if (!currentUser.isLead) return;
+      if (users[index].isLead) return alert("Teamleitung kann nicht entfernt werden");
+      users.splice(index, 1);
+      renderTable();
+    }
+
+    function leaveTeam() {
+      users = users.filter(u => u.name !== currentUser.name);
+      alert("Du hast das Team verlassen.");
+      location.reload();
+    }
+  </script></body>
+</html>
